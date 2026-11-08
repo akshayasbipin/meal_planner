@@ -1,0 +1,31 @@
+{
+  "model": "qwen2.5:7b",
+  "cook_for": 1,
+  "buy_for": 3,
+  "fixed_breakfast": "Chocos with milk + 1 boiled egg",
+  "can_cook": [
+    "rice"
+  ],
+  "cannot_cook_yet": [
+    "roti"
+  ],
+  "diet": "Mostly vegetarian, occasional meat; eggs and dairy are okay.",
+  "health_context": "Prioritise folate-rich greens/legumes and protein. Low folate, markedly low vitamin D and low-normal B12 were reported. Food supports but does not replace clinician-directed treatment.",
+  "activity": "Mostly sitting, little exercise.",
+  "temperature": 0.3,
+  "num_ctx": 8192,
+  "max_retries": 2,
+  "min_learning_dinners": 4,
+  "max_repeats_lunch": 2,
+  "max_repeats_dinner": 1,
+  "weekly_staples": [
+    "Milk",
+    "Chocos",
+    "Egg"
+  ],
+  "serve_rice": true,
+  "greens": [
+    "Spinach",
+    "Methi"
+  ]
+}

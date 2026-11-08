@@ -1,0 +1,5 @@
+ollama>=0.4.7
+openpyxl>=3.1.5
+streamlit>=1.50
+pandas>=2.0
+watchdog
