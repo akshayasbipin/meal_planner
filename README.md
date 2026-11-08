@@ -1,51 +1,87 @@
-# Local weekly meal planner (Excel + Ollama + Streamlit)
+# Weekly Meal Planner
 
-Plans 7 days of lunch/dinner/snack from your `Grocery.xlsx` using a local Ollama model, builds the shopping list
-from your Pantry, and lets you tweak everything in a browser UI. Everything runs on your Mac.
+A local Streamlit app for planning meals from an Excel workbook. Ollama suggests a weekly plan; Python checks the meal rules and builds the shopping list from your dishes, ingredients, Grocery sheet, and Pantry.
 
-## Folder
-```text
-meal_planner/
-├── Grocery.xlsx        # your workbook
-├── app.py              # the interactive UI  (streamlit run app.py)
-├── meal_planner.py     # the engine + command-line version
-├── ui_logic.py         # helpers for the UI
-├── config.json         # your rules (also editable in the UI's Settings tab)
-├── requirements.txt
-├── plans/              # created automatically: one JSON per week (history)
-└── README.md
-```
+## Start Here
 
-## Setup (once)
+1. Install [Ollama](https://ollama.com/) and pull the default model:
+
+   ```bash
+   ollama pull qwen2.5:7b
+   ```
+
+2. From this project folder, create the Python environment and install dependencies:
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+
+3. Keep Ollama running, then launch the app:
+
+   ```bash
+   streamlit run app.py
+   ```
+
+   Open the local URL printed in the terminal. The default workbook is `Grocery.xlsx`; change its path in the sidebar to use another workbook. Close the workbook in Excel before saving changes from the app.
+
+## Prepare the Workbook
+
+The app looks for these sheets (names are not case-sensitive; spaces and underscores are interchangeable):
+
+| Sheet | What to put there |
+| --- | --- |
+| `Grocery` | Put category names in row 1 and grocery items below each category. Add new foods here so ingredients can be categorized in the shopping list. |
+| `What can i make` | One dish per row. Required: `Dish` (or `Recipe` / `Name`). Recommended: `Ingredients`, `Ease (E/M/D)`, `Serving size (1 person)`, `B / L / D`, and `Cooking status`. `Link` is optional. |
+| `snacks` | Snack names in the first column, starting below the header. Add or remove snack choices directly in Excel. |
+| `Pantry` | `Item`, `Available quantity`, and `Unit`. The app creates this sheet if it is missing. A quantity above zero counts as in stock. |
+| `required` / `notes` | Optional nutrition preferences or reference notes for the model. |
+
+Use meal values such as `Lunch`, `Dinner`, or `Lunch / Dinner`; leave the meal type blank to make a dish flexible for lunch or dinner. Set cooking status to `Known`, `Learning`, or `Not tried`. Known, non-difficult dishes are eligible for lunch; dinner can include dishes you are still learning. Add ingredients as a comma-separated list to improve shopping-list matching.
+
+## Use the App
+
+### This week
+
+Choose a week starting date, then select **Generate week**. Change lunch, dinner, or snack using the dropdowns. Select **Lock** on days to keep them when regenerating. The plan is saved to `plans/plan_<Monday>.json` as you edit; use **Past plans** in the sidebar to reopen a saved week.
+
+![Weekly plan screenshot](pics/this_week.png)
+
+### Shopping
+
+The list updates when you change meals. **To buy / check** hides pantry items; **Everything** shows them too. Enter the amount and unit you bought, tick **Got it**, then choose **Add ticked items to Pantry**. You can also download or copy a text list. Items missing from the Grocery sheet may appear as optional or need checking.
+
+![Shopping screenshot](pics/shopping.png)
+
+### Dishes
+
+Edit a dish's ingredients, ease, meal type, status, or serving size in the table, then select **Save dish changes**. To add one, expand **Add a new dish**, enter its name and details, and submit. Model suggestions can also be added with **Add to Dishes**. These changes are written to the workbook selected in the sidebar.
+
+![Dishes screenshot](pics/dishes.png)
+
+### Pantry and Settings
+
+Edit pantry items and quantities in the table, then select **Save pantry**. The Shopping tab's **Add ticked items to Pantry** does the same after a purchase. Settings such as the model, breakfast, repeat limits, and diet are saved to `config.json`, not to Excel.
+
+![Pantry screenshot](pics/pantry.png)
+
+## Saving to Excel
+
+Dish and Pantry changes are saved directly to the selected workbook when you use their save buttons. A dated backup (for example, `Grocery_backup_2026-11-08.xlsx`) is created beside it before the first workbook save of that day.
+
+Weekly plans are stored in `plans/` separately. To write the current plan into Excel, select **Save plan to Excel** on the This week tab. This creates or replaces the planner output sheets: `Meal Plan`, `Shopping List`, and `Prep Notes`; `Suggestions` is included when there are suggestions. Keep personal notes elsewhere, because these output sheets are regenerated when saved.
+
+## Optional: Command Line
+
+The non-UI planner saves a dated copy by default. To update the input workbook itself, it makes a dated backup first:
+
 ```bash
-ollama pull qwen2.5:7b
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+python meal_planner.py                  # writes a separate planned workbook
+python meal_planner.py --inplace        # updates Grocery.xlsx after backing it up
+python meal_planner.py --workbook path/to/food.xlsx
 ```
 
-## Daily use
-```bash
-streamlit run app.py          # opens http://localhost:8501
-python meal_planner.py --inplace   # no-UI version, good for a Sunday cron job
-```
-Keep the Ollama app running. Close `Grocery.xlsx` in Excel before saving from the UI.
+## Planning Rules and Health Note
 
-## The UI tabs
-- **This week** - Generate, swap any dish from a dropdown, lock days you like and regenerate the rest, save to Excel.
-- **Shopping** - live list that follows your swaps. Tick what you bought, enter the quantity, and it goes into Pantry.
-  Download/copy the list to send to the family.
-- **Dishes** - edit status (Known / Learning / Not tried), meal type, ease and ingredients; add dishes.
-- **Pantry** - edit what's at home.
-- **Settings** - model, breakfast, learning-dinner target, repeats, what you can't cook yet.
-
-## How the rules work
-- Lunch = dishes marked **Known** whose meal type includes Lunch (or is blank).
-- Dinner = any dinner-capable dish; at least `min_learning_dinners` per week must be non-Known (shown with 🆕).
-- Roti (and anything in `cannot_cook_yet`), breakfast-only dishes and Rice are never picked. Rice is added as a side.
-- The model's answer is validated by code; near-miss spellings are fixed, rule breaks trigger a retry, and as a last
-  resort Python swaps in valid dishes.
-- The shopping list is computed by Python from the dishes' ingredients and your Pantry, not guessed by the model.
-
-## Limits
-This is a planning helper, not a nutritionist. Food supports but does not replace your clinician's treatment for the
-vitamin D, folate and B12 findings.
+Lunches favor Known dishes, dinners favor dishes to learn, and configured restrictions (such as dishes you cannot cook yet) are applied in code. The shopping list is calculated from workbook ingredients and Pantry contents, not generated by the model. Review meal and shopping suggestions before using them. This is a planning aid, not medical or nutrition advice; follow your clinician's guidance for vitamin D, folate, and B12.
