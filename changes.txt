@@ -1,0 +1,13 @@
+- improve the README.md with every change
+
+- page user login
+next page they enter their workbook (or else fetch from supabase)
+the data is stored into supabase
+
+- u can also ask from user somthing like rules (like what if the user prefers to only eat curd rice on tues/thursday lunch -> then that should always be implementd)
+
+- feature : web scrape and find and compare prices between amazon now, flipkart mins, instamart, zepto, blinkit
+
+- why dont we make one more additional tab -> new tab -> input deficiency, their normal rate, and ur rate(if avaible) -> on the basis of that info, we can suggest user some more meal plans -> they can then add it to the excel if they want -> u can use LLM here if u want, but i suggest a simple web serach, if not LLM also works
+
+which means one more plan -> the workbook should be given by user every run (no need for plans folder, we can add that later when we include supabase for storage and per user login etc)

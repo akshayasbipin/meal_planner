@@ -7,35 +7,6 @@ import pandas as pd
 
 import meal_planner as mp
 
-EASE = ["", "Easy", "Medium", "Difficult"]
-MEALS = ["", "Breakfast", "Lunch", "Dinner", "Lunch / Dinner", "Breakfast / Lunch",
-         "Breakfast / Dinner", "Breakfast / Lunch / Dinner"]
-STATUS = ["Known", "Learning", "Not tried", "Unknown"]
-_STATUS_LABEL = {"known": "Known", "learning": "Learning", "not tried": "Not tried", "unknown": "Unknown"}
-_COLS = {"Ingredients": "ingredients", "Ease": "ease", "Meal": "meal", "Status": "status", "Serving": "serving"}
-
-
-# ---------------------------------------------------------------- dishes
-def dishes_df(dishes: list[dict]) -> pd.DataFrame:
-    rows = [{"Dish": d["name"], "Ingredients": d["ingredients"], "Ease": "" if d["ease"] == "Unknown" else d["ease"],
-             "Meal": mp.meals_text(d["meals"]), "Status": _STATUS_LABEL[d["status"]], "Serving": d["serving"]}
-            for d in dishes]
-    return pd.DataFrame(rows, index=[d["row"] for d in dishes])
-
-
-def diff_dishes(orig: pd.DataFrame, edited: pd.DataFrame) -> list[tuple[int, str, object]]:
-    """Cell-level changes as (excel_row, field, value). Untouched cells are never rewritten."""
-    changes = []
-    for row in edited.index:
-        if row not in orig.index:
-            continue
-        for col, field in _COLS.items():
-            old, new = str(orig.at[row, col] or ""), str(edited.at[row, col] if pd.notna(edited.at[row, col]) else "")
-            if old != new:
-                changes.append((int(row), field, None if new in ("", "Unknown") and field in ("status", "ease", "meal") else new))
-    return changes
-
-
 # ---------------------------------------------------------------- pantry
 def pantry_df(wb) -> pd.DataFrame:
     ws = mp.ensure_pantry_sheet(wb)
@@ -92,6 +63,11 @@ def merge_bought(pantry: list[dict], bought: list[dict], aliases: dict):
             else:
                 hit["qty"] = int(total) if total.is_integer() else total
     return rows, msgs
+
+
+def meal_options(names: list[str], current: str, other_meal: str, adjacent: set[str]) -> list[str]:
+    eligible = [name for name in names if name != other_meal and name not in adjacent]
+    return sorted(set(eligible + [current]), key=str.lower)
 
 
 # ---------------------------------------------------------------- shopping

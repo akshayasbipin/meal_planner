@@ -3,143 +3,143 @@
   "days": [
     {
       "day": "Monday",
-      "lunch": "soy chunk curry",
+      "lunch": "Egg burji",
       "dinner": "paneer bhurji",
       "snack": "cucumber",
-      "reason": "Start with known dishes"
+      "reason": "Variety and protein"
     },
     {
       "day": "Tuesday",
-      "lunch": "Egg burji",
-      "dinner": "methi dal + beetroot poriyal + curd",
+      "lunch": "Fried potato",
+      "dinner": "spinach stir-fry",
       "snack": "almonds",
-      "reason": "Variety in protein sources"
+      "reason": "Leafy greens and potatoes"
     },
     {
       "day": "Wednesday",
-      "lunch": "Fried potato",
-      "dinner": "spinach stir-fry",
+      "lunch": "Lady finger fried",
+      "dinner": "methi dal + beetroot poriyal + curd",
       "snack": "Orange",
-      "reason": "Simple and easy options"
+      "reason": "Folate and vitamin D"
     },
     {
       "day": "Thursday",
-      "lunch": "Lady finger fried",
+      "lunch": "soy chunk curry",
       "dinner": "chicken curry",
       "snack": "banana",
-      "reason": "Include leafy greens and protein"
+      "reason": "Protein and variety"
     },
     {
       "day": "Friday",
-      "lunch": "Egg burji",
+      "lunch": "Butter paneer masala",
       "dinner": "Paneer curry",
       "snack": "Oats cooked in milk + nuts + banana",
-      "reason": "Known lunch, learning dinner"
+      "reason": "Rich in protein and folate"
     },
     {
       "day": "Saturday",
       "lunch": "Fried potato",
       "dinner": "Creamy black pepper msuhroom",
-      "snack": "Orange",
-      "reason": "Folate-rich and protein"
+      "snack": "almonds",
+      "reason": "Variety and folate"
     },
     {
       "day": "Sunday",
-      "lunch": "Lady finger fried",
+      "lunch": "soy chunk curry",
       "dinner": "Creamy buttery paneer curry",
-      "snack": "almonds",
-      "reason": "Variety and known dishes"
+      "snack": "cucumber",
+      "reason": "Protein and folate"
     }
   ],
   "plan": {
     "days": [
       {
         "day": "Monday",
-        "lunch": "soy chunk curry",
+        "lunch": "Egg burji",
         "dinner": "paneer bhurji",
         "snack": "cucumber",
-        "reason": "Start with known dishes"
+        "reason": "Variety and protein"
       },
       {
         "day": "Tuesday",
-        "lunch": "Egg burji",
-        "dinner": "methi dal + beetroot poriyal + curd",
+        "lunch": "Fried potato",
+        "dinner": "spinach stir-fry",
         "snack": "almonds",
-        "reason": "Variety in protein sources"
+        "reason": "Leafy greens and potatoes"
       },
       {
         "day": "Wednesday",
-        "lunch": "Fried potato",
-        "dinner": "spinach stir-fry",
+        "lunch": "Lady finger fried",
+        "dinner": "methi dal + beetroot poriyal + curd",
         "snack": "Orange",
-        "reason": "Simple and easy options"
+        "reason": "Folate and vitamin D"
       },
       {
         "day": "Thursday",
-        "lunch": "Lady finger fried",
+        "lunch": "soy chunk curry",
         "dinner": "chicken curry",
         "snack": "banana",
-        "reason": "Include leafy greens and protein"
+        "reason": "Protein and variety"
       },
       {
         "day": "Friday",
-        "lunch": "Egg burji",
+        "lunch": "Butter paneer masala",
         "dinner": "Paneer curry",
         "snack": "Oats cooked in milk + nuts + banana",
-        "reason": "Known lunch, learning dinner"
+        "reason": "Rich in protein and folate"
       },
       {
         "day": "Saturday",
         "lunch": "Fried potato",
         "dinner": "Creamy black pepper mushrooms",
-        "snack": "Guava",
-        "reason": "Folate-rich and protein"
+        "snack": "almonds",
+        "reason": "Variety and folate"
       },
       {
         "day": "Sunday",
-        "lunch": "Lady finger fried",
+        "lunch": "soy chunk curry",
         "dinner": "Creamy buttery paneer curry",
-        "snack": "almonds",
-        "reason": "Variety and known dishes"
+        "snack": "cucumber",
+        "reason": "Protein and folate"
       }
     ],
     "prep_notes": [
-      "Soak rajma overnight for Creamy black pepper mushrooms",
-      "Batch-wash greens for spinach stir-fry",
-      "Prepare paneer bhurji and Paneer curry in advance"
+      "Soak rajma overnight for better digestion.",
+      "Batch-wash greens to save time and keep them fresh.",
+      "Use leftover paneer for Paneer curry to save on cooking time."
     ],
     "suggested_new_dishes": [
       {
-        "name": "Mixed vegetable bhurji",
+        "name": "Mushroom and paneer bhurji",
         "meal": "Dinner",
-        "why": "Combines multiple vegetables and is easy to prepare",
+        "why": "Combines protein from paneer and mushrooms.",
         "main_ingredients": [
+          "Paneer",
+          "Mushroom",
           "Egg",
-          "Spinach",
-          "Lady finger",
-          "Cucumber",
           "Curd"
         ]
       },
       {
-        "name": "Dal and vegetable curry",
-        "meal": "Dinner",
-        "why": "Incorporates lentils and vegetables for a balanced meal",
+        "name": "Fenugreek and spinach curry",
+        "meal": "Lunch",
+        "why": "High in folate and easy to prepare.",
         "main_ingredients": [
-          "Masoor dal",
           "Spinach",
-          "Lady finger",
-          "Cucumber"
+          "Fenugreek",
+          "Curd",
+          "Egg"
         ]
       },
       {
-        "name": "Stuffed lady fingers",
+        "name": "Toor dal and methi curry",
         "meal": "Dinner",
-        "why": "Creative and fun to make",
+        "why": "Rich in folate and protein.",
         "main_ingredients": [
-          "Lady finger",
+          "Toor dal",
           "Methi",
-          "Curd"
+          "Curd",
+          "Egg"
         ]
       }
     ]

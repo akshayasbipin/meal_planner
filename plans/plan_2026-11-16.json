@@ -1,0 +1,59 @@
+{
+  "monday": "2026-11-16",
+  "days": [
+    {
+      "day": "Monday",
+      "lunch": "Lady finger fried",
+      "dinner": "soy chunk curry",
+      "snack": "Orange",
+      "reason": "Selected using your workbook's nutrient priorities."
+    },
+    {
+      "day": "Tuesday",
+      "lunch": "Butter paneer masala",
+      "dinner": "Egg burji",
+      "snack": "Oats cooked in milk + nuts + banana",
+      "reason": "Selected using your workbook's nutrient priorities."
+    },
+    {
+      "day": "Wednesday",
+      "lunch": "Lady finger fried",
+      "dinner": "Creamy buttery paneer curry",
+      "snack": "Orange",
+      "reason": "Selected using your workbook's nutrient priorities."
+    },
+    {
+      "day": "Thursday",
+      "lunch": "Fried potato",
+      "dinner": "Butter paneer masala",
+      "snack": "almonds",
+      "reason": "Selected using your workbook's nutrient priorities."
+    },
+    {
+      "day": "Friday",
+      "lunch": "soy chunk curry",
+      "dinner": "Creamy black pepper msuhroom",
+      "snack": "Peanut Chikki",
+      "reason": "Selected using your workbook's nutrient priorities."
+    },
+    {
+      "day": "Saturday",
+      "lunch": "Fried potato",
+      "dinner": "chicken curry",
+      "snack": "Oats cooked in milk + nuts + banana",
+      "reason": "Selected using your workbook's nutrient priorities."
+    },
+    {
+      "day": "Sunday",
+      "lunch": "soy chunk curry",
+      "dinner": "methi dal + beetroot poriyal + curd",
+      "snack": "Peanut Chikki",
+      "reason": "Selected using your workbook's nutrient priorities."
+    }
+  ],
+  "plan": {
+    "prep_notes": [],
+    "suggested_new_dishes": []
+  },
+  "notes": []
+}
