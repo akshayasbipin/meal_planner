@@ -1,35 +1,34 @@
-"""Pure helpers for app.py (no Streamlit import, so they can be tested on their own)."""
+"""Pure helpers for the Streamlit meal planner UI."""
 from __future__ import annotations
-
 from collections import defaultdict
-
 import pandas as pd
-
 import meal_planner as mp
 
-# ---------------------------------------------------------------- pantry
+
 def pantry_df(wb) -> pd.DataFrame:
     ws = mp.ensure_pantry_sheet(wb)
     headers = [c.value for c in ws[1]]
-    ii, qi, ui = (mp.find_col(headers, ["Item"]), mp.find_col(headers, ["Available quantity", "Quantity", "Qty"]),
-                  mp.find_col(headers, ["Unit"]))
+    ii = mp.find_col(headers, ["Item"])
+    qi = mp.find_col(headers, ["Available quantity", "Quantity", "Qty"])
+    ui = mp.find_col(headers, ["Unit"])
     rows = []
     for r in ws.iter_rows(min_row=2, values_only=True):
-        if ii is not None and r[ii]:
-            q = r[qi] if qi is not None else None
+        if ii is not None and ii < len(r) and r[ii]:
+            q = r[qi] if qi is not None and qi < len(r) else None
             try:
                 q = float(q) if q not in (None, "") else None
             except (TypeError, ValueError):
                 q = None
-            rows.append({"Item": str(r[ii]).strip(), "Available quantity": q,
-                         "Unit": str(r[ui] or "") if ui is not None else ""})
+            unit = r[ui] if ui is not None and ui < len(r) else ""
+            rows.append({"Item": str(r[ii]).strip(), "Available quantity": q, "Unit": str(unit or "")})
     return pd.DataFrame(rows, columns=["Item", "Available quantity", "Unit"])
 
 
 def df_to_pantry_rows(df: pd.DataFrame) -> list[dict]:
     out = []
     for _, r in df.iterrows():
-        item = str(r.get("Item") or "").strip()
+        raw_item = r.get("Item")
+        item = "" if pd.isna(raw_item) else str(raw_item).strip()
         if not item or item.lower() == "nan":
             continue
         q = r.get("Available quantity")
@@ -40,7 +39,7 @@ def df_to_pantry_rows(df: pd.DataFrame) -> list[dict]:
 
 
 def merge_bought(pantry: list[dict], bought: list[dict], aliases: dict):
-    """Add newly bought quantities to the pantry. Returns (new_rows, messages)."""
+    """Add newly bought quantities. Returns (new_rows, messages)."""
     rows = [dict(r) for r in pantry]
     msgs = []
     for b in bought:
@@ -51,9 +50,9 @@ def merge_bought(pantry: list[dict], bought: list[dict], aliases: dict):
             rows.append({"item": b["item"], "qty": qty, "unit": b.get("unit", "")})
         elif qty in (None, ""):
             msgs.append(f"{b['item']}: no quantity entered, pantry unchanged.")
-        elif hit["qty"] in (None, "") or (hit["unit"] or "").lower() != (b.get("unit") or "").lower():
-            if hit["qty"] not in (None, ""):
-                msgs.append(f"{b['item']}: units differ ({hit['unit']} vs {b.get('unit')}), replaced the old amount.")
+        elif hit.get("qty") in (None, "") or (hit.get("unit") or "").lower() != (b.get("unit") or "").lower():
+            if hit.get("qty") not in (None, ""):
+                msgs.append(f"{b['item']}: units differ ({hit.get('unit')} vs {b.get('unit')}), replaced the old amount.")
             hit["qty"], hit["unit"] = qty, b.get("unit", "")
         else:
             try:
@@ -69,22 +68,17 @@ def meal_options(names: list[str], current: str, other_meal: str, adjacent: set[
     eligible = [name for name in names if name != other_meal and name not in adjacent]
     return sorted(set(eligible + [current]), key=str.lower)
 
-
-# ---------------------------------------------------------------- shopping
 SHOP_COLS = ["Item", "Category", "Status", "Needed for", "Meals", "In pantry", "Notes"]
-
 
 def shopping_df(rows: list[list]) -> pd.DataFrame:
     return pd.DataFrame([r[:7] for r in rows], columns=SHOP_COLS)
-
 
 def shopping_text(rows: list[list], title: str) -> str:
     groups = defaultdict(list)
     for item, cat, status, uses, *_ in rows:
         if status != "In stock":
-            groups[cat].append(f"- {item}" + (f" ({uses})" if cat != "Not in Grocery sheet" and len(uses) < 40 else ""))
+            groups[cat].append(f"- {item}" + (f" ({uses})" if cat != "Not in Grocery sheet" and len(str(uses)) < 40 else ""))
     lines = [title, ""]
     for cat in sorted(groups, key=lambda c: (c == "Not in Grocery sheet", c)):
-        label = "Check at home / optional" if cat == "Not in Grocery sheet" else cat
-        lines += [f"{label}:"] + groups[cat] + [""]
+        lines += ["Check at home / optional:" if cat == "Not in Grocery sheet" else f"{cat}:"] + groups[cat] + [""]
     return "\n".join(lines).strip()

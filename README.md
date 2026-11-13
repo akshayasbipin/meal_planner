@@ -1,8 +1,34 @@
-# Weekly Meal Planner
+# Personalised Meal Planner
 
-A local Streamlit app that builds a weekly plan and shopping list from an Excel workbook. Meal selection is randomized and rule-based; no model, internet connection, or Ollama installation is needed.
+A Streamlit meal planner built around your Excel workbook, with Supabase authentication and per-user persistence. The existing rule-based meal-selection engine remains local and deterministic; no LLM is required to generate the weekly plan.
 
-## Start
+## What's included
+
+- Supabase email/password sign-up and login.
+- Workbook upload to a private Supabase Storage bucket, or restore the user's saved workbook.
+- Per-user weekly plans, pantry, permanent rules and nutrition profile in Supabase Postgres.
+- Permanent hard rules: fixed weekday meal, avoid dish, avoid ingredient.
+- Soft preference: prefer ingredient (influences meal score).
+- Nutrition Discovery: save a nutrient profile, research food sources and recipe ideas, and append a selected dish to the workbook.
+- Grocery price research across Amazon Now, Flipkart Minutes, Instamart, Zepto and Blinkit using web-search results and retailer-specific search links.
+- Search results are explicitly treated as leads. Price mentions extracted from snippets are not verified current offers.
+
+## 1. Create Supabase project
+
+1. Create a project at https://supabase.com.
+2. Open **SQL Editor** and run `sql/supabase_schema.sql`.
+3. In **Project Settings → API**, copy the Project URL and publishable/anon key.
+4. Confirm email authentication is configured as you prefer. If email confirmation is enabled, users must confirm before signing in.
+
+The SQL creates the private `user-workbooks` bucket, user-owned tables and Row Level Security policies. Do not put a Supabase `service_role` key in this app.
+
+## 2. Configure secrets
+
+For local development, create `.streamlit/secrets.toml` from `.streamlit/secrets.toml.example` and fill in the values. Do not commit this file.
+
+`BRAVE_SEARCH_API_KEY` is optional. It enables in-app web research using Brave Search. Without it, the app still displays retailer-specific Google search links. Brave Search API pricing and terms can change; check its current dashboard before use.
+
+## 3. Install and run
 
 ```bash
 python3 -m venv .venv
@@ -11,49 +37,42 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Open the local URL printed by Streamlit. The default workbook is `Grocery.xlsx`; change its path in the sidebar to use another workbook. Close the workbook in Excel before saving changes from the app.
+## 4. Workbook format
 
-## Workbook Setup
+The uploaded `.xlsx` must contain these sheets (case-insensitive; spaces/underscores are interchangeable):
 
-Sheet names are case-insensitive; spaces and underscores are interchangeable.
+| Sheet | Purpose |
+|---|---|
+| `Grocery` | Grocery categories in row 1 and items below each category |
+| `What can i make` | Dish, ingredients, ease, meal type, cooking status, optional link |
+| `snacks` | Snack names in the first column |
+| `Pantry` | Optional; created if missing |
+| `Planner Settings` | Optional planner settings |
+| `required` | Optional nutrient keyword priorities |
 
-| Sheet | Contents |
-| --- | --- |
-| `Grocery` | Category names in row 1, with grocery items beneath each category. Add foods here to categorize shopping-list items. |
-| `What can i make` | One dish per row. `Dish` (or `Recipe` / `Name`) is required. Add `Ingredients`, `Ease (E/M/D)`, `B / L / D`, and `Cooking status` to improve planning. `Link` and serving size are optional. |
-| `snacks` | Snack names in the first column below the header. |
-| `Pantry` | `Item`, `Available quantity`, and `Unit`. Created if missing. A positive quantity counts as in stock. |
-| `Planner Settings` | `Setting` and `Value` columns. Controls repeat caps, fixed breakfast, servings, rice, cookable dishes, staples, ingredient exclusions, and aliases. |
-| `required` | A nutrient table with `Nutrient`, `Foods to include`, and `Weekly target servings` columns. Its header can follow introductory notes. These workbook rows drive food matching and weekly selection. |
+The workbook is saved back to the user's private Supabase Storage path when the app changes the pantry or adds a dish. Weekly plans and user rules are stored in separate Postgres tables.
 
-Edit dishes directly in Excel. Use meal values such as `Lunch`, `Dinner`, or `Lunch / Dinner`; a blank meal type is flexible. Mark familiar dishes `Known`, and set difficulty to Easy or Medium for lunch eligibility. Dishes listed in `cannot_cook_yet` in `Planner Settings` are excluded. List ingredients separated by commas so shopping and nutrient priorities can match them.
+## 5. Rule behaviour
 
-## Weekly Plan
+- `fixed_meal`: hard rule. Example: Tuesday + Lunch + Curd Rice. It overrides a conflicting locked-day selection.
+- `avoid_dish`: hard exclusion from generation.
+- `avoid_ingredient`: hard exclusion if the ingredient appears in the dish name or ingredient text.
+- `prefer_ingredient`: soft preference; increases the candidate's score but does not guarantee it.
 
-Choose a week starting date and select **Generate week**. Breakfast is the fixed setting; lunch and dinner are drawn from their eligible workbook pools, and snacks are picked from the `snacks` sheet. Selection favors Known and easier dishes and uses the food terms and weekly targets in the workbook's `required` sheet. Edit those rows to change which foods and nutrient priorities the planner matches.
+A fixed dish must exist in the workbook and be eligible for the selected meal according to the workbook's meal type, familiarity and cooking settings.
 
-Lunch and dinner differ on the same day. A main dish is not repeated in either slot on the next day, and configurable weekly repeat caps still apply. Use the **Keep** checkbox to preserve a day while regenerating. Manual dropdown choices also block same-day and adjacent-day repeats; existing saved conflicts remain selectable so they can be corrected and are flagged. Plans save to `plans/plan_<Monday>.json` as you edit. Use **Past plans** to reopen a saved week.
+## 6. Price research limitations
 
-The nutrition matching is a simple keyword preference, not nutrient analysis or medical advice. Food does not replace clinician-directed care for folate, vitamin D, or B12 deficiencies.
+The research tab searches each named retailer's indexed public pages. Search engines may not index quick-commerce catalogue data, and search snippets can be stale or location-independent. The app does not bypass logins, bot protection or private APIs. Always open the retailer result and verify the exact product, pack size, seller, delivery fee, availability and delivery postcode before comparing. The initial version does not claim to provide real-time checkout prices.
 
-## Shopping + Pantry
+## 7. Security and deployment notes
 
-The shopping list updates with the current plan. **To buy / check** hides items already in the pantry; **Everything** shows the full list. Enter the quantity and unit purchased, tick **Got it**, then select **Add ticked items to Pantry**. Compatible quantities are added; different units replace the old quantity with a warning. The pantry table is directly below the shopping list and can also be edited and saved manually. Items absent from the Grocery sheet are marked for checking.
+- RLS policies scope database rows to `auth.uid()`.
+- Workbook files are in a private Storage bucket and paths start with the user's UUID.
+- Only the Supabase publishable/anon key belongs in Streamlit secrets; never expose the service-role key.
+- For a public deployment, configure secrets in the hosting provider rather than committing `.streamlit/secrets.toml`.
+- Add rate limiting and abuse monitoring before opening sign-up publicly.
 
-Download the list as text or expand **Copyable list**. The planner calculates shopping needs from workbook ingredients, pantry contents, and configured weekly breakfast staples.
+## 8. Current scope / next improvements
 
-## Meal Prep
-
-The **Meal prep** tab gives a day-by-day meal and ingredient schedule, compares required shopping items with the Pantry sheet, and separates confirmed items to buy from items that need a manual check because they are missing from the Grocery sheet. Dishes without workbook ingredients are flagged. Download the same report as Markdown or save the plan to Excel to create a `Meal Prep` sheet.
-
-## Workbook Settings and Saving
-
-Planner settings are stored in the workbook's `Planner Settings` sheet; the built-in defaults are only used when a setting is missing. There is no in-app Settings tab. Weekly plans remain separate from the workbook. Select **Save plan to Excel** to create or replace the `Meal Plan`, `Shopping List`, and `Prep Notes` output sheets.
-
-Workbook edits are written directly to the selected workbook. Automatic backups are disabled. The CLI writes a dated planned copy by default; `--inplace` updates the selected workbook directly:
-
-```bash
-python meal_planner.py
-python meal_planner.py --inplace
-python meal_planner.py --workbook path/to/food.xlsx
-```
+This first integrated version stores workbook, pantry, rules, plans and nutrition profile. It intentionally does not yet implement a full history browser, account deletion workflow, password reset UI, or a canonical nutrition database with nutrient quantities per serving. The web research layer can later be expanded with verified retailer feeds or authorised affiliate/catalogue APIs.

@@ -441,11 +441,31 @@ def load_context(wb, cfg) -> SimpleNamespace:
                            lim=limits(cfg, lunch_pool, dinner_pool), matchers=build_matchers(grocery, cfg))
 
 
-def generate(ctx, cfg, locked=None):
-    """Choose a varied week from workbook dishes without requiring an LLM."""
+def generate(ctx, cfg, locked=None, rules=None):
+    """Choose a varied week. Active user rules are enforced before scoring."""
     rng = random.Random()
     locked = locked or {}
+    rules = [r for r in (rules or []) if r.get("active", True)]
     all_dishes = {norm(d["name"]): d for d in ctx.dishes}
+    day_index = {name.lower(): i for i, name in enumerate(DAYS)}
+    fixed = {}
+    avoided_dishes = {norm(r.get("dish") or r.get("value")) for r in rules if r.get("rule_type") == "avoid_dish"}
+    avoided_terms = [norm(r.get("value")) for r in rules if r.get("rule_type") == "avoid_ingredient" and r.get("value")]
+    preferred_terms = [norm(r.get("value")) for r in rules if r.get("rule_type") == "prefer_ingredient" and r.get("value")]
+    for rule in rules:
+        if rule.get("rule_type") != "fixed_meal":
+            continue
+        idx = day_index.get(norm(rule.get("day")))
+        slot = norm(rule.get("meal"))
+        dish = str(rule.get("dish") or rule.get("value") or "").strip()
+        if idx is None or slot not in {"lunch", "dinner"} or not dish:
+            continue
+        if norm(dish) not in all_dishes:
+            raise ValueError(f"Your fixed-meal rule refers to '{dish}', which is not in the workbook.")
+        pool = ctx.lunch_pool if slot == "lunch" else ctx.dinner_pool
+        if norm(dish) not in {norm(d["name"]) for d in pool}:
+            raise ValueError(f"'{dish}' is not currently eligible for {slot} under your workbook settings.")
+        fixed[(idx, slot)] = dish
     traits = {}
     for key, dish in all_dishes.items():
         text = norm(dish["name"] + " " + dish["ingredients"])
@@ -454,9 +474,11 @@ def generate(ctx, cfg, locked=None):
 
     def dish_score(name):
         dish = all_dishes.get(norm(name), {})
+        ingredients = norm(dish.get("name", "") + " " + dish.get("ingredients", ""))
+        preference_score = sum(2 for term in preferred_terms if term in ingredients)
         return (3 if dish.get("status") == "known" else 0) + {
             "Easy": 2, "Medium": 1, "Difficult": -3,
-        }.get(dish.get("ease"), 0)
+        }.get(dish.get("ease"), 0) + preference_score
 
     def added_traits(names, counts):
         score = 0
@@ -473,8 +495,14 @@ def generate(ctx, cfg, locked=None):
         if day_index == 7:
             return selected
         pin = locked.get(day_index, {})
-        lunches = [pin["lunch"]] if pin.get("lunch") else [d["name"] for d in ctx.lunch_pool]
-        dinners = [pin["dinner"]] if pin.get("dinner") else [d["name"] for d in ctx.dinner_pool]
+        lunches = [fixed[(day_index, "lunch")]] if (day_index, "lunch") in fixed else ([pin["lunch"]] if pin.get("lunch") else [d["name"] for d in ctx.lunch_pool])
+        dinners = [fixed[(day_index, "dinner")]] if (day_index, "dinner") in fixed else ([pin["dinner"]] if pin.get("dinner") else [d["name"] for d in ctx.dinner_pool])
+        def allowed(name):
+            dish = all_dishes.get(norm(name), {})
+            text = norm(dish.get("name", "") + " " + dish.get("ingredients", ""))
+            return norm(name) not in avoided_dishes and not any(term and term in text for term in avoided_terms)
+        lunches = [name for name in lunches if allowed(name)]
+        dinners = [name for name in dinners if allowed(name)]
         options = [(lunch, dinner) for lunch in lunches for dinner in dinners
                    if lunch != dinner and use_lunch[lunch] < ctx.lim["cap_l"]
                    and use_dinner[dinner] < ctx.lim["cap_d"]

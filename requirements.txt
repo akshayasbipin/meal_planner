@@ -1,4 +1,6 @@
-openpyxl>=3.1.5
-streamlit>=1.50
-pandas>=2.0
-watchdog
+streamlit>=1.40,<2
+pandas>=2.1,<4
+openpyxl>=3.1,<4
+supabase>=2.10,<3
+requests>=2.31,<3
+python-dotenv>=1.0,<2
